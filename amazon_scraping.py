@@ -4,22 +4,24 @@ from selenium.webdriver.chrome.options import Options
 import time
 import re
 
-uri = 'https://www.amazon.co.jp/gp/product/'
-product = 'B01HEDBILK'
-page=1
-setTime = 20
-url = uri + product + '/'
-print (url)
-
-def requestHTML(url):
+def get_html(url):
+    print (url)
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     driver = webdriver.Chrome(executable_path="./python/chromedriver",chrome_options=options)
     driver.get(url)
     html = driver.page_source.encode('utf-8')
-    amazonResult = BeautifulSoup(html,'html.parser')
-    return amazonResult
+    result = BeautifulSoup(html,'html.parser')
+    return result
+
+def search (keywords):
+    url = "https://www.amazon.co.jp/s/field-keywords=" + keywords
+    return url
+
+def product (product_id):
+    url = "https://www.amazon.co.jp/dp/product/" + product_id
+    return url
 
 def price(result):
     try:
@@ -29,6 +31,7 @@ def price(result):
         return price
     except AttributeError:
         print("price error")
+
 def details(result):
     try:
         details = re.sub(r'</?b>|詳細を見る',"",(result.find('div',id="deliveryPromiseInsideBuyBox_feature_div").text)).strip()
@@ -40,7 +43,11 @@ def details(result):
 
 def ships(result):
     try:
-        ships = re.sub(r'この出品商品には代金引換とコンビニ・ATM・ネットバンキング・電子マネー払いが利用できます。|ギフトラッピングを利用できます。',"",(result.find('div',id="merchant-info").text)).strip()
+        ships = re.sub(
+            r'この出品商品には代金引換とコンビニ・ATM・ネットバンキング・電子マネー払いが利用できます。| ギフトラッピングを利用できます。',
+            "",
+            (result.find('div',id="merchant-info").text)
+            ).strip()
         print("販売元:")
         print(ships)
         return ships
@@ -75,13 +82,19 @@ def url_img_src(result,name):
     except AttributeError:
         print("img url error")
 
-def html_write(amazonResult):
-    path = '/python/data/log.html'
-    s = str(amazonResult)
-    with open(path, mode='w') as f:
-        f.write(s)
-    with open(path) as f:
-        result= f.read()
-    return result
 
-html = requestHTML(url)
+def search_list (result):
+    int_count =20
+    product_list = []
+    for i in range(int_count):
+        count = "result_" + str(i)
+        search = result.find('li',id=count)
+        product_id = search['data-asin']
+        name = search.find('h2').text
+        price = re.sub('\s',"",(search.find('span',class_="a-color-price").text))
+        product_list.append([product_id,name,price])
+    return product_list
+
+html = get_html(search("Intel"))
+
+search_list(html)

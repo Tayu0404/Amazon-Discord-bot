@@ -34,6 +34,7 @@ RUN unzip chromedriver_linux64.zip
 RUN mkdir /usr/local/chromedriver/
 RUN mkdir -p /python/data/
 
-#COPY main.py /python/
+COPY main.py /python/
+COPY amazon_scraping.py /python/
 RUN mv chromedriver /python/
-#CMD ["python","/python/main.py"]
+CMD ["python","/python/main.py"]
