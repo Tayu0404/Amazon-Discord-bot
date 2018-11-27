@@ -7,94 +7,53 @@ import re
 def get_html(url):
     print (url)
     options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
     driver = webdriver.Chrome(executable_path="./python/chromedriver",chrome_options=options)
     driver.get(url)
-    html = driver.page_source.encode('utf-8')
-    result = BeautifulSoup(html,'html.parser')
+    html = driver.page_source.encode("utf-8")
+    result = BeautifulSoup(html,"html.parser")
     return result
 
-def search (keywords):
-    url = "https://www.amazon.co.jp/s/field-keywords=" + keywords
-    return url
+class Amazon(object):
+    def __init__(self):
+        self.amazon_list = []
+    
+    def search_list (self,keywords):
+        self.amazon_list = []
+        url = "https://www.amazon.co.jp/s/field-keywords=" + keywords
+        html = get_html(url)
+        max_count = max([
+            int(intStrings)
+                for finded in re.findall(r"result_[0-1]?[0-9]", str(html))
+                    for intStrings in re.findall(r"\d+", finded)
+        ]) + 1
+        for i in range(max_count):
+            count = "result_" + str(i)
+            search = html.find("li",id=count)
+            product_id = search["data-asin"]
+            name = search.find("h2").text
+            price = re.sub("\s","",(search.find("span",class_="a-color-price").text))
+            self.amazon_list.append([product_id,name,price])
+        return self.amazon_list
 
-def product (product_id):
-    url = "https://www.amazon.co.jp/dp/product/" + product_id
-    return url
-
-def price(result):
-    try:
-        price = re.sub('\s',"",(result.find('span',id="priceblock_ourprice").text))
-        print("値段:")
-        print(price)
-        return price
-    except AttributeError:
-        print("price error")
-
-def details(result):
-    try:
-        details = re.sub(r'</?b>|詳細を見る',"",(result.find('div',id="deliveryPromiseInsideBuyBox_feature_div").text)).strip()
-        print("詳細:")
-        print(details)
-        return details
-    except AttributeError:
-        print("details error")
-
-def ships(result):
-    try:
+    def search_product (self,product_id):
+        url = "https://www.amazon.co.jp/dp/product/" + product_id
+        html = get_html(url)
+        price = re.sub("\s","",(html.find("span",id="priceblock_ourprice").text))
+        details = re.sub(r"</?b>|詳細を見る","",(html.find("div",id="deliveryPromiseInsideBuyBox_feature_div").text)).strip()
         ships = re.sub(
-            r'この出品商品には代金引換とコンビニ・ATM・ネットバンキング・電子マネー払いが利用できます。| ギフトラッピングを利用できます。',
+            r"この出品商品には代金引換とコンビニ・ATM・ネットバンキング・電子マネー払いが利用できます。| ギフトラッピングを利用できます。",
             "",
-            (result.find('div',id="merchant-info").text)
+            (html.find("div",id="merchant-info").text)
             ).strip()
-        print("販売元:")
-        print(ships)
-        return ships
-    except AttributeError:
-        print("ships error")
-
-def name(result):
-    try:
-        name = (result.find('span',id="productTitle").text).strip()
-        print("商品名:")
-        print(name)
-        return name
-    except AttributeError:
-        print("name error")
-
-def stock(result):
-    try:
-        stock = re.sub(r'\n|在庫状況について',"",(result.find('div',id="availability").text)).strip()
-        print("在庫状況:")
-        print(stock)
-        return stock
-    except AttributeError:
-        print("stock error")
-
-def url_img_src(result,name):
-    try:
-        img_src = result.find('img',alt=name)
-        img_url = img_src['src']
-
-        print("画像URL:")
-        print(img_url)
-    except AttributeError:
-        print("img url error")
-
-
-def search_list (result):
-    int_count =20
-    product_list = []
-    for i in range(int_count):
-        count = "result_" + str(i)
-        search = result.find('li',id=count)
-        product_id = search['data-asin']
-        name = search.find('h2').text
-        price = re.sub('\s',"",(search.find('span',class_="a-color-price").text))
-        product_list.append([product_id,name,price])
-    return product_list
-
-html = get_html(search("Intel"))
-
-search_list(html)
+        name = (html.find("span",id="productTitle").text).strip()
+        stock = re.sub(r"\n|在庫状況について","",(html.find("div",id="availability").text)).strip()
+        img_url = html.find("img",alt=name)["src"]
+        product_details = []
+        product_details.extend([name, price,stock,details,ships,img_url,url])
+        return product_details
+    def search_details (self, choice):
+        product_id = self.amazon_list[choice][0]
+        product_list = searchi_product(product_id)
+        return product_list
