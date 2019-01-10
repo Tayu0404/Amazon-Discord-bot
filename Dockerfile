@@ -5,7 +5,7 @@ MAINTAINER tayu
 RUN pip install \
 	beautifulsoup4 \
 	selenium \
-	requests \
+	joblib \
 	discord.py
 
 RUN apt-get update
