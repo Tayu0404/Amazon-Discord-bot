@@ -1,4 +1,6 @@
 docker run \
 	--name amazon -it --rm --init\
 	--env-file=environment_variable.txt\
-	amazon_scraiping_bot
+	-v `pwd`/source:/python \
+	amazon_scraiping_bot \
+	bin/bash
