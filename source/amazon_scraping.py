@@ -22,6 +22,7 @@ class Amazon(object):
     def __init__(self):
         self.user_product = {}
         self.stock_check_list = {}
+        self.periodically_search_list = {}
         
     def list(self,keywords,user_id):
         url = "https://www.amazon.co.jp/s/field-keywords=" + keywords
@@ -118,3 +119,30 @@ class Amazon(object):
         for i in range(len(user_list)):
             return_message_text = return_message_text + "\n" + str(i) + " : " + user_list[str(i)]
         return return_message_text
+
+class periodically(object):
+    def __init__ (self):
+        self.keylist = {}
+        check_thread = threading.Thread(target=check)
+        check_thread.start()
+
+    def list_set(self,user_id,key):
+        self.periodically_search_list[user_id] = {}
+        num = len(self.periodically_search_list[user_id])
+        self.periodically_search_list[user_id].setdefault(str(num),key)
+    
+    def search(self):
+        key_list = self.periodically_search_list
+        if len(key_list) > 0:
+            for i in key_list.keys():
+                for l in key_list[i].keys():
+                    print(l)
+
+    def run_threaded(self):
+        job_thread = threading.Thread(target=search)
+        job_thread.start()
+
+    def check(self):
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
