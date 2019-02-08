@@ -22,7 +22,6 @@ class Amazon(object):
     def __init__(self):
         self.user_product = {}
         self.stock_check_list = {}
-        self.periodically_search_list = {}
         
     def list(self,keywords,user_id):
         url = "https://www.amazon.co.jp/s/field-keywords=" + keywords
