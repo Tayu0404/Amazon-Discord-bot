@@ -121,9 +121,7 @@ class Amazon(object):
 
 class periodically(object):
     def __init__ (self):
-        self.keylist = {}
-        check_thread = threading.Thread(target=check)
-        check_thread.start()
+        self.key_list = {}
 
     def list_set(self,user_id,key):
         self.periodically_search_list[user_id] = {}
@@ -131,17 +129,24 @@ class periodically(object):
         self.periodically_search_list[user_id].setdefault(str(num),key)
     
     def search(self):
-        key_list = self.periodically_search_list
-        if len(key_list) > 0:
+        print("Search")
+        if len(self.key_list) > 0:
             for i in key_list.keys():
                 for l in key_list[i].keys():
                     print(l)
 
-    def run_threaded(self):
-        job_thread = threading.Thread(target=search)
-        job_thread.start()
+    def seconds_time(self):
+          t = time.strptime(time.ctime())
+          print(time.strftime("%Y/%m/%d %H:%M:%S", t))
 
     def check(self):
         while True:
             schedule.run_pending()
             time.sleep(1)
+    
+    def check_start(self):
+        self.check_thread = threading.Thread(target=self.check)
+        schedule.every(1).minutes.do(self.search)
+        schedule.every(1).seconds.do(self.seconds_time)
+        self.check_thread.start()
+periodically().check_start()
