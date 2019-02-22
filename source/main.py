@@ -10,15 +10,12 @@ import asyncio
 
 client = discord.Client()
 amazon = amazon_scraping.Amazon()
-
 @client.event
 async def on_ready():
     print('ログインしました')
     developer_id = await client.get_user_info('257025417490202625')
     await client.send_message(developer_id,'Bot login')
     check.check_start()
-
-
 @client.event
 async def on_message(message):
     if message.content.startswith('!amazon search '):
@@ -79,25 +76,30 @@ class CheckStock(object):
         num = str(len(self.list[user_id]))
         self.list[user_id].setdefault(num,key)
 
-    def search(self):
+    def search(self,loop):
         for user_id in self.list.keys():
             for num in self.list[user_id].keys():
                 key = self.list[user_id][num]
                 return_message = amazon.check_search(key)
-                stock_send_message(user_id,return_message)
+                asyncio.run_coroutine_threadsafe(stock_send_message(user_id,return_message),loop)
 
     def list_check(self):
         print(self.list)
 
-    def roop(self):
+    def check_loop(self):
         print('check start')
         while True:
             schedule.run_pending()
             time.sleep(1)
     
     def check_start(self):
-        self.check_thread = threading.Thread(target=self.roop)
-        schedule.every(1).minutes.do(self.search)
+        loop = asyncio.get_event_loop()
+        self.check_thread = (
+                threading.Thread(
+                    target=self.check_loop
+                    )
+                )
+        schedule.every(1).minutes.do(self.search,loop)
         self.check_thread.start()
 
 check = CheckStock()
