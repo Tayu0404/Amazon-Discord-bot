@@ -105,7 +105,9 @@ class Amazon(object):
         url = 'https://www.amazon.co.jp/dp/product/' + key
         html= get_html(url)
         stock = re.sub(r'\n|在庫状況について','',(html.find('div',id='availability').text)).strip()
+        print(stock)
         if re.search(r'在庫あり|残り',stock):
+            print("在庫")
             price = re.sub('\s','',(html.find('span',id='priceblock_ourprice').text))
             details = re.sub(r'</?b>|詳細を見る','',(html.find('div',id='ddmDeliveryMessage').text)).strip()
             ships = re.sub(r'\n','',(html.find('div',id='merchant-info').text)).strip()

@@ -8,8 +8,51 @@ import schedule
 import time
 import asyncio
 
+async def stock_send_message(user_id,return_message):
+    user_dm = await client.get_user_info(user_id)
+    await client.send_message(user_dm,return_message)
+
+class CheckStock(object):
+    def __init__(self):
+        self.list = {}
+
+    def list_set(self,user_id,key):
+        if user_id not in self.list:
+            self.list[user_id] = {}
+        num = str(len(self.list[user_id]))
+        self.list[user_id].setdefault(num,key)
+
+    def search(self,loop):
+        for user_id in self.list.keys():
+            for num in self.list[user_id].keys():
+                key = self.list[user_id][num]
+                return_message = amazon.check_search(key)
+                asyncio.run_coroutine_threadsafe(stock_send_message(user_id,return_message),loop)
+                time.sleep(10)
+    def list_check(self):
+        print(self.list)
+
+    def check_loop(self):
+        print('check start')
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+    
+    def check_start(self):
+        loop = asyncio.get_event_loop()
+        self.check_thread = (
+                threading.Thread(
+                    target=self.check_loop
+                    )
+                )
+        schedule.every(1).minutes.do(self.search,loop)
+        self.check_thread.start()
+
+
 client = discord.Client()
+check = CheckStock()
 amazon = amazon_scraping.Amazon()
+
 @client.event
 async def on_ready():
     print('ログインしました')
@@ -47,8 +90,6 @@ async def on_message(message):
         if re.search(r'ping',message.content):
             return_message = 'pysm'
             await client.send_message(message.channel,return_message)
-        if re.search(r'check',message.content):
-            check.search()
         if re.search(r'user_check',message.content):
             check.list_check()
 
@@ -62,45 +103,4 @@ async def on_message(message):
                 )
         await client.send_message(message.channel,return_message)
 
-async def stock_send_message(user_id,return_message):
-    user_dm = await client.get_user_info(user_id)
-    print(user_dm)
-    await client.send_message(user_dm,return_message)
-
-class CheckStock(object):
-    def __init__(self):
-        self.list = {}
-
-    def list_set(self,user_id,key):
-        self.list[user_id] = {}
-        num = str(len(self.list[user_id]))
-        self.list[user_id].setdefault(num,key)
-
-    def search(self,loop):
-        for user_id in self.list.keys():
-            for num in self.list[user_id].keys():
-                key = self.list[user_id][num]
-                return_message = amazon.check_search(key)
-                asyncio.run_coroutine_threadsafe(stock_send_message(user_id,return_message),loop)
-
-    def list_check(self):
-        print(self.list)
-
-    def check_loop(self):
-        print('check start')
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
-    
-    def check_start(self):
-        loop = asyncio.get_event_loop()
-        self.check_thread = (
-                threading.Thread(
-                    target=self.check_loop
-                    )
-                )
-        schedule.every(1).minutes.do(self.search,loop)
-        self.check_thread.start()
-
-check = CheckStock()
 client.run(os.environ['discord-token'])
