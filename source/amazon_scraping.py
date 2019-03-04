@@ -1,20 +1,21 @@
 import re
 import threading
 import urllib
+import time
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 
 def get_html(url):
     print (url)
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
-    driver = webdriver.Chrome(executable_path='./python/chromedriver',chrome_options=options)
+    driver = webdriver.Firefox(executable_path='./usr/local/bin/geckodriver',firefox_options=options)
     driver.get(url)
-    html = driver.page_source.encode('utf-8')
-    result = BeautifulSoup(html,'html.parser')
+    result = BeautifulSoup(driver.page_source,'html.parser')
+    driver.quit()
     return result
 
 class Amazon(object):
@@ -58,8 +59,9 @@ class Amazon(object):
                             )
                 self.user_product[user_id].setdefault(str(i),product_id)
             return return_message_text
-        except:
+        except Exception as e:
             return_message_text = 'あとで考える'
+            print(e)
             return return_message_text
     def product(self,product_id):
         try:
@@ -83,7 +85,7 @@ class Amazon(object):
                     url
                     )
             return return_message_text
-        except:
+        except Exception as e:
             return_message_text = (
             'I could not find the item\n' \
             'The following can be considered\n' \
@@ -93,6 +95,7 @@ class Amazon(object):
             '・Search words is wrong\n' \
             '```'
             )
+            print (e)
             return return_message_text
     def direct_search(self,keywords,user_id):
         url = 'https://www.amazon.co.jp/dp/' + self.user_product[user_id][str(keywords)]
@@ -122,7 +125,7 @@ class Amazon(object):
             product_id = html.find('li',id='result_0')['data-asin']
             return_message = self.product(product_id)
             return return_message
-        except:
+        except Exception as e:
             return_message_text = (
             'I could not find the item\n' \
             'The following can be considered\n' \
@@ -132,6 +135,7 @@ class Amazon(object):
             '・Search words is wrong\n' \
             '```'
             )
+            print(e)
             return return_message_text
 
     def check_search(self,key):
@@ -156,3 +160,8 @@ class Amazon(object):
                     url
                     )
             return return_message_text
+    
+    def test_search(self,key):
+        url = 'https://www.amazon.co.jp/dp/product/'+key
+        html = get_html(url)
+        print(html)

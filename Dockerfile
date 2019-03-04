@@ -9,24 +9,17 @@ RUN pip install \
 	discord.py \
 	schedule
 
-RUN apt-get update
-RUN apt-get install -y\
-	fonts-liberation \
-	libappindicator3-1 \
-	libasound2 \
-	libatk-bridge2.0-0 \
-	libgtk-3-0 \
-	libnspr4 \
-	libnss3 \
-	libx11-xcb1 \
-	libxtst6 \
-	lsb-release \
-	xdg-utils\
-	libgconf2-4 \
-	libnss3-dev \
-	unzip
-
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-RUN dpkg -i google-chrome*.deb
-
-RUN mkdir /python
+RUN set -ex; \
+	apt-get update; \
+	\
+	apt-get install -y --no-install-recommends wget; \
+	wget https://github.com/mozilla/geckodriver/releases/download/v0.23.0/geckodriver-v0.23.0-linux64.tar.gz; \
+	tar zxvf geckodriver*.tar.gz; \
+	mv geckodriver /usr/local/bin/; \
+	rm geckodriver*.tar.gz; \
+	\
+	apt-get install -y --no-install-recommends firefox-esr; \
+	\
+	rm -rf /var/lib/apt/lists/*; \
+	\
+	mkdir /python

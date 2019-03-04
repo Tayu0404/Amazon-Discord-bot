@@ -112,6 +112,9 @@ async def on_message(message):
             await client.send_message(message.channel,return_message)
         if re.search(r'user_check',message.content):
             check.list_check()
+        if re.search(r'test',message.content):
+            key = re.sub(r'!amazon debug test ','',(message.content))
+            amazon.test_search(key)
 
     if re.search(r'!amazon help',message.content):
         return_message = (
