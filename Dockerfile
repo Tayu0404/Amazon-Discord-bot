@@ -11,15 +11,31 @@ RUN pip install \
 
 RUN set -ex; \
 	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		fonts-liberation \
+		libappindicator3-1 \
+		libasound2 \
+		libatk-bridge2.0-0 \
+		libgtk-3-0 \
+		libnspr4 \
+		libnss3 \
+		libx11-xcb1 \
+		libxtst6 \
+		lsb-release \
+		xdg-utils\
+		libgconf2-4 \
+		libnss3-dev \
+		wget \
+		unzip; \
 	\
-	apt-get install -y --no-install-recommends wget; \
-	wget https://github.com/mozilla/geckodriver/releases/download/v0.23.0/geckodriver-v0.23.0-linux64.tar.gz; \
-	tar zxvf geckodriver*.tar.gz; \
-	mv geckodriver /usr/local/bin/; \
-	rm geckodriver*.tar.gz; \
+	wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb; \
+	dpkg -i google-chrome*.deb; \
+	rm google-chrome*.deb; \
 	\
-	apt-get install -y --no-install-recommends firefox-esr; \
+	wget https://chromedriver.storage.googleapis.com/2.43/chromedriver_linux64.zip; \
+	unzip chromedriver_linux64.zip; \
+	rm chromedriver_linux64.zip; \
+	mkdir /python; \
+	mv chromedriver /python/; \
 	\
-	rm -rf /var/lib/apt/lists/*; \
-	\
-	mkdir /python
+	#rm -rf /var/lib/apt/lists/*
