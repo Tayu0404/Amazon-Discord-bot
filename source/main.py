@@ -1,34 +1,52 @@
-import discord
-import os
-import amazon_scraping
-import re
-import urllib.parse
-import threading
-import schedule
-import time
 import asyncio
+import os
+import re
+import time
+import threading
 
-async def stock_send_message(user_id,return_message):
+import discord
+import schedule
+import urllib.parse
+
+import amazon_scraping
+
+async def dm_send_message(user_id,return_message):
     user_dm = await client.get_user_info(user_id)
     await client.send_message(user_dm,return_message)
 
 class CheckStock(object):
     def __init__(self):
         self.list = {}
+        self.del_list = {}
 
     def list_set(self,user_id,key):
         if user_id not in self.list:
             self.list[user_id] = {}
-        num = str(len(self.list[user_id]))
-        self.list[user_id].setdefault(num,key)
+        self.list[user_id].setdefault(key,key)
+    
+    def list_del(self):
+        for user_id in self.del_list:
+            for key in self.del_list[user_id]:
+                del self.list[user_id][key]
+            if len(self.list[user_id]) == 0:
+                del self.list[user_id]
+        self.del_list = {}
 
     def search(self,loop):
         for user_id in self.list.keys():
-            for num in self.list[user_id].keys():
-                key = self.list[user_id][num]
-                return_message = amazon.check_search(key)
-                asyncio.run_coroutine_threadsafe(stock_send_message(user_id,return_message),loop)
-                time.sleep(10)
+            self.del_list[user_id] = []
+            for key in self.list[user_id].keys():
+                search_word = self.list[user_id][key]
+                return_message = amazon.check_search(search_word)
+                if return_message != None:
+                    asyncio.run_coroutine_threadsafe(
+                            dm_send_message(user_id,return_message),
+                            loop
+                            )
+                    self.del_list[user_id].append(key)
+                time.sleep(50)
+        self.list_del()
+
     def list_check(self):
         print(self.list)
 
@@ -64,11 +82,13 @@ async def on_message(message):
     if message.content.startswith('!amazon search '):
         keyword = urllib.parse.quote(re.sub(r'!amazon search ','',(message.content).replace('\n',' ')))
         return_message = amazon.product_search(keyword)
+        print(return_message)
         await client.send_message(message.channel, return_message)
 
     if re.search(r'!amazon list ',message.content):
         keyword = urllib.parse.quote(re.sub(r'!amazon list ','',(message.content).replace('\n',' ')))
         return_message = amazon.list(keyword,message.author.id)
+        print(return_message)
         await client.send_message(message.channel, return_message)
 
     if re.search(r'!amazon num ',message.content):
@@ -80,7 +100,7 @@ async def on_message(message):
         key = re.sub(r'!amazon set ','',(message.content))
         user_id = message.author.id
         check.list_set(user_id,key)
-        return_message = 'あとで考える'
+        return_message = 'I registered in the Stock check.\nI will inform you DM when it Stock'
         await client.send_message(message.channel,return_message)
 
     if re.search(r'!amazon debug ',message.content):
@@ -88,7 +108,7 @@ async def on_message(message):
             return_message = amazon.show_list_debug(message.author.id)
             await client.send_message(message.channel,return_message)
         if re.search(r'ping',message.content):
-            return_message = 'pysm'
+            return_message = 'pong'
             await client.send_message(message.channel,return_message)
         if re.search(r'user_check',message.content):
             check.list_check()
