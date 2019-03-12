@@ -15,6 +15,7 @@ def get_html(url):
     driver.get(url)
     html = driver.page_source.encode('utf-8')
     result = BeautifulSoup(html,'html.parser')
+    driver.quit()
     return result
 
 class Amazon(object):
